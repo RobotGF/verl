@@ -264,6 +264,11 @@ class vLLMHttpServer:
         else:
             cudagraph_mode = compilation_config.get("cudagraph_mode", "FULL_AND_PIECEWISE")
             compilation_config = json.dumps({"cudagraph_mode": cudagraph_mode})
+
+        seed = self.config.get("seed", 0)
+        # for different replica to have different seed to make identical generation results
+        seed = seed + seed * self.replica_rank
+
         args = {
             "dtype": self.config.dtype,
             "load_format": self.config.load_format,
@@ -282,7 +287,7 @@ class vLLMHttpServer:
             "gpu_memory_utilization": self.config.gpu_memory_utilization,
             "disable_log_stats": self.config.disable_log_stats,
             "tensor_parallel_size": self.config.tensor_model_parallel_size,
-            "seed": self.config.get("seed", 0),
+            "seed": seed,
             "override_generation_config": json.dumps(override_generation_config),
             "quantization": quantization,
             "hf_overrides": hf_overrides,
