@@ -99,7 +99,7 @@ def get_master_addr_port(master_port_range: Optional[list[int]] = None) -> tuple
         while port < master_port_range[1]:
             try:
                 with socket.socket() as s:
-                    s.bind(('', port))
+                    s.bind(("", port))
                     break
             except OSError:
                 port += 1  # Increment port number if already in use
@@ -518,8 +518,7 @@ class RayWorkerGroup(WorkerGroup):
                     scheduling_strategy=PlacementGroupSchedulingStrategy(
                         placement_group=pg, placement_group_bundle_index=bundle_index
                     ),
-                    master_port_range=master_port_range,
-                ).remote()
+                ).remote(master_port_range=master_port_range)
             )
         elif self._master_addr is not None and self._master_port is not None:
             logger.debug(f"{self._master_addr=} {self._master_port=}")
@@ -530,7 +529,12 @@ class RayWorkerGroup(WorkerGroup):
             )
 
     def _init_with_resource_pool(
-        self, resource_pool, ray_cls_with_init, bin_pack, detached, worker_env=None,
+        self,
+        resource_pool,
+        ray_cls_with_init,
+        bin_pack,
+        detached,
+        worker_env=None,
     ):
         """Initialize the worker group by creating new workers from a resource pool.
 
