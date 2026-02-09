@@ -553,7 +553,7 @@ class RayWorkerGroup(WorkerGroup):
         for pg_idx, pg in enumerate(sort_placement_group_by_node_ip(pgs)):
             assert local_world_size <= pg.bundle_count, f"when generating for {self.name_prefix}, for the "
             if pg_idx == 0:
-                self._get_master_addr_port(pg,bundle_index=0, master_port_range=self.master_port_range)
+                self._get_master_addr_port(pg, bundle_index=0, master_port_range=self.master_port_range)
 
             for local_rank in range(local_world_size):
                 rank += 1
