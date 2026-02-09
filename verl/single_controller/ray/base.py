@@ -441,6 +441,7 @@ class RayWorkerGroup(WorkerGroup):
         self._master_addr = kwargs.pop("master_addr", None)
         self._master_port = kwargs.pop("master_port", None)
         self.use_gpu = kwargs.pop("use_gpu", resource_pool.use_gpu if resource_pool is not None else True)
+        self.master_port_range = kwargs.pop("master_port_range", None)
         super().__init__(resource_pool=resource_pool, **kwargs)
         self.ray_cls_with_init = ray_cls_with_init
         self.name_prefix = get_random_string(length=6) if name_prefix is None else name_prefix
@@ -552,7 +553,7 @@ class RayWorkerGroup(WorkerGroup):
         for pg_idx, pg in enumerate(sort_placement_group_by_node_ip(pgs)):
             assert local_world_size <= pg.bundle_count, f"when generating for {self.name_prefix}, for the "
             if pg_idx == 0:
-                self._get_master_addr_port(pg)
+                self._get_master_addr_port(pg,bundle_index=0, master_port_range=self.master_port_range)
 
             for local_rank in range(local_world_size):
                 rank += 1
@@ -586,7 +587,8 @@ class RayWorkerGroup(WorkerGroup):
         local_world_size = resource_pool.store[0]
         self._get_master_addr_port(
             pgs[resource_pool.start_bundle_index // local_world_size],
-            resource_pool.start_bundle_index % local_world_size,
+            bundle_index=resource_pool.start_bundle_index % local_world_size,
+            master_port_range=self.master_port_range,
         )
         for curr_rank in range(resource_pool.start_bundle_index, resource_pool.start_bundle_index + world_size):
             pg_idx = curr_rank // local_world_size
