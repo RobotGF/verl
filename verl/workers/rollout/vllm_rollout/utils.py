@@ -302,7 +302,8 @@ class vLLMColocateWorkerExtension:
         os.makedirs(save_dir, exist_ok=True)
         model = self.model_runner.model
         rank = getattr(self, "local_rank", 0)
-        path = os.path.join(save_dir, f"vllm_weights_{suffix}_rank{rank}.safetensors")
+        device_uuid = get_device_uuid(self.device.index)
+        path = os.path.join(save_dir, f"vllm_weights_{suffix}_rank{rank}_device{device_uuid}.safetensors")
         from safetensors.torch import save_model
 
         save_model(model, path)
