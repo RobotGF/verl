@@ -179,6 +179,12 @@ class vLLMHttpServer:
         """Get http server address and port."""
         assert self._server_port is not None, "http server is not launched, port is None"
         return self._server_address, self._server_port
+    
+    @property
+    def lora_as_adapter(self) -> bool:
+        return (
+            self.model_config.lora_rank > 0 or self.model_config.lora.get("rank", 0) > 0
+        ) and not self.model_config.lora.get("merge", False)
 
     async def collective_rpc(
         self,
@@ -543,9 +549,7 @@ class vLLMHttpServer:
 
         # Add lora request
         lora_request = None
-        if (
-            self.model_config.lora_rank > 0 or self.model_config.lora.get("rank", 0) > 0
-        ) and not self.model_config.lora.get("merge", False):
+        if self.lora_as_adapter:
             # Make sure we also check that the lora is already loaded in the engine
             lora_loaded = VLLM_LORA_INT_ID in await self.engine.list_loras()
             if lora_loaded:
@@ -619,10 +623,7 @@ class vLLMHttpServer:
         if self.rollout_mode == RolloutMode.HYBRID:
             # Don't use engine.sleep(level=2) here
             # lora only update adapter weights, so set sleep level to 1
-            lora_as_adapter = (
-                self.model_config.lora_rank > 0 or self.model_config.lora.get("rank", 0) > 0
-            ) and not self.model_config.lora.get("merge", False)
-            if lora_as_adapter:
+            if self.lora_as_adapter:
                 sleep_level = 1
             else:
                 sleep_level = 2
