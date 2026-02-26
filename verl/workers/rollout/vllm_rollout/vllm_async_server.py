@@ -618,7 +618,15 @@ class vLLMHttpServer:
 
         if self.rollout_mode == RolloutMode.HYBRID:
             # Don't use engine.sleep(level=2) here
-            await self.engine.collective_rpc("sleep", kwargs={"level": 2})
+            # lora only update adapter weights, so set sleep level to 1
+            lora_as_adapter = (
+                self.model_config.lora_rank > 0 or self.model_config.lora.get("rank", 0) > 0
+            ) and not self.model_config.lora.get("merge", False)
+            if lora_as_adapter:
+                sleep_level = 1
+            else:
+                sleep_level = 2
+            await self.engine.collective_rpc("sleep", kwargs={"level": sleep_level})
 
             # clear encoder cache: https://github.com/vllm-project/vllm/pull/33452
             # await self.engine.reset_encoder_cache()
