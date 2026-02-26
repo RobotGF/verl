@@ -13,13 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import math
+import os
 
 import torch
 from megatron.core import parallel_state as mpu
 from megatron.core.packed_seq_params import PackedSeqParams
 
 from verl.utils.model import CausalLMOutputForPPO
+
+logger = logging.getLogger(__file__)
+logger.setLevel(os.getenv("VERL_LOGGING_LEVEL", "WARN"))
 
 
 def preprocess_packed_seqs(
@@ -341,7 +346,7 @@ def preprocess_thd_no_padding(
                 original_size = d.numel()
                 pad = torch.zeros(align_size - d.numel(), dtype=d.dtype, device=d.device)
                 d = torch.cat([d, pad], dim=0)
-                print(
+                logger.warning_once(
                     f"Padding tensor for context parallel alignment, original_size={original_size}, "
                     f"align_size={align_size}"
                 )
